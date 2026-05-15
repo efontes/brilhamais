@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "titulo": "Biblia Sagrada",
+    "autor": "Diversos",
+    "disponivel": true
+  },
+  {
+    "id": 2,
+    "titulo": "O Cortiço",
+    "autor": "Aluísio Azevedo",
+    "disponivel": true
+  },
+  {
+    "id": 3,
+    "titulo": "Capitães da Areia",
+    "autor": "Jorge Amado",
+    "disponivel": false
+  },
+  {
+    "id": 4,
+    "titulo": "A Hora da Estrela",
+    "autor": "Clarice Lispector",
+    "disponivel": true
+  },
+  {
+    "id": 5,
+    "titulo": "Memórias Póstumas de Brás Cubas",
+    "autor": "Machado de Assis",
+    "disponivel": false
+  },
+  {
+    "id": 6,
+    "titulo": "Iracema",
+    "autor": "José de Alencar",
+    "disponivel": true
+  },
+  {
+    "id": 7,
+    "titulo": "Vidas Secas",
+    "autor": "Graciliano Ramos",
+    "disponivel": true
+  },
+  {
+    "id": 8,
+    "titulo": "Senhora",
+    "autor": "José de Alencar",
+    "disponivel": false
+  },
+  {
+    "id": 9,
+    "titulo": "O Alienista",
+    "autor": "Machado de Assis",
+    "disponivel": true
+  },
+  {
+    "id": 10,
+    "titulo": "Grande Sertão: Veredas",
+    "autor": "João Guimarães Rosa",
+    "disponivel": true
+  }
+]
