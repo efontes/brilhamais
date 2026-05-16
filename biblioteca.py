@@ -58,6 +58,27 @@ def destruir_livro(livros):
     Se não existir avisar.
     Deve salvar no JSON
     """
+
+    limparTela()
+    id = int(input("informe o id do livro:"))
+    contador = 0
+    achei = False
+    for livro in livros:
+
+        if livro["id"] == id:
+            achei = True
+            livros.pop(contador)
+            salvar_livros(livros)
+            print("Livro destruido")
+
+            break
+
+        contador = contador + 1
+
+    if achei == False:
+        print("Livro não encontrado")
+
+    input("Pressione enter para continuar")
     pass
 
 livros = carregar_livros()
