@@ -29,6 +29,12 @@ def listar_livros(livros):
     Deve listar todos os livros cadastrados.
     Mostrar ID, título, autor e status.
     """
+    print("lista de livros:")
+    
+    for livro in livros:
+
+        print(f"{livro["id"]} - {livro["autor"]} - {livro["titulo"]} - {"\033[0;32mDisponivel\033[m " if livro["disponivel"]  else "\033[0;31mIndisponivel\033[m"} ")
+    input("\nPressione ENTER para continuar")
     pass
 
 
