@@ -43,13 +43,37 @@ def emprestar_livro(livros):
 
 
 def devolver_livro(livros):
-    """
-    Deve pedir o ID do livro.
-    Se existir e estiver emprestado, marcar como disponível.
-    Se não existir ou já estiver disponível, avisar.
-    Deve salvar no JSON a devolução
-    """
-    pass
+    limparTela()
+    id = int(input("Informe o ID do livro: "))
+    achei = False
+    for livro in livros:
+        if livro["id"] == id:
+            if livro["disponivel"] == False:
+                livro["disponivel"] = True
+                print(f"Você devolveu o livro {livro} com sucesso! ")
+                achei = True
+            elif livro["disponivel"] == True:
+                print(f"O livro {livro} já existe e não precisa de devolução")
+                achei = True
+    if achei == False:
+        print("O livro não existe em nosso sistema!")
+        
+    input("Deseja continuar S/N: ")
+    
+        
+        
+            
+                
+                
+            
+            
+            
+       
+            
+
+        
+    
+    
 
 def destruir_livro(livros):
     """
