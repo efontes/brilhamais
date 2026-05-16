@@ -33,6 +33,36 @@ def listar_livros(livros):
 
 
 def emprestar_livro(livros):
+    limparTela()
+    id = int(input("digite o ID do livro que deseja:"))
+
+    achei = False
+    for livro in livros:
+        if livro["id"] == id:
+            if livro["disponivel"] == True:
+                livro["disponivel"] = False
+                print(f"você pegou emprestado o livro {livro["titulo"]} - {livro["autor"]} ")
+                achei = True
+                salvar_livros(livros)
+                break
+            else:
+                print("o livro esta indisponivel.")
+                input("pressione ENTER para continuar")
+
+
+    if achei == False:
+        print("não foi localizado um livro com esse ID")
+
+    input("pressione ENTER para continuar")
+
+
+
+
+
+    
+
+    
+    
     """
     Deve pedir o ID do livro.
     Se existir e estiver disponível, marcar como indisponível.
