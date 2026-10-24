@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Aluno - Portal do Aluno</title>
+  <!-- Folha de estilo separada -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Cabeçalho e Navegação Global -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo-area">
+        <div class="logo-icon">🎓</div>
+        <div class="logo-text">
+          <h1>Portal do Aluno</h1>
+          <span>Gestão Acadêmica</span>
+        </div>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">📋 Lista de Alunos</a>
+        <a href="cadastro.html" class="nav-link">➕ Novo Cadastro</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-container">
+
+    <div class="page-header">
+      <div>
+        <h2>Editar Aluno</h2>
+        <p id="editSubtitle">Atualize as informações cadastrais do estudante.</p>
+      </div>
+      <div>
+        <a href="index.html" class="btn btn-secondary">
+          ⬅ Voltar para a Lista
+        </a>
+      </div>
+    </div>
+
+    <!-- Formulário em Card Dedicado -->
+    <div class="form-card">
+      <form id="formEditar" novalidate>
+        <!-- ID Oculto do Aluno -->
+        <input type="hidden" id="alunoId" name="alunoId">
+
+        <div class="form-grid">
+
+          <!-- Nome Completo -->
+          <div class="form-group full-width">
+            <label for="nome">Nome Completo <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="nome" 
+              name="nome" 
+              class="form-input" 
+              placeholder="Ex: Mariana Silveira Costa" 
+              required
+            >
+          </div>
+
+          <!-- Matrícula -->
+          <div class="form-group">
+            <label for="matricula">Matrícula</label>
+            <input 
+              type="text" 
+              id="matricula" 
+              name="matricula" 
+              class="form-input" 
+              placeholder="Número de matrícula"
+              readonly
+              style="background-color: #f1f5f9; cursor: not-allowed;"
+            >
+          </div>
+
+          <!-- E-mail -->
+          <div class="form-group">
+            <label for="email">E-mail <span class="required">*</span></label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              class="form-input" 
+              placeholder="aluno@exemplo.com" 
+              required
+            >
+          </div>
+
+          <!-- Telefone -->
+          <div class="form-group">
+            <label for="telefone">Telefone / WhatsApp</label>
+            <input 
+              type="tel" 
+              id="telefone" 
+              name="telefone" 
+              class="form-input" 
+              placeholder="(11) 99999-9999"
+              maxlength="15"
+            >
+          </div>
+
+          <!-- Data de Nascimento -->
+          <div class="form-group">
+            <label for="dataNascimento">Data de Nascimento <span class="required">*</span></label>
+            <input 
+              type="date" 
+              id="dataNascimento" 
+              name="dataNascimento" 
+              class="form-input" 
+              required
+            >
+          </div>
+
+          <!-- Curso -->
+          <div class="form-group">
+            <label for="curso">Curso <span class="required">*</span></label>
+            <select id="curso" name="curso" class="form-select" required>
+              <option value="">Selecione um curso...</option>
+              <option value="Engenharia de Software">Engenharia de Software</option>
+              <option value="Ciência da Computação">Ciência da Computação</option>
+              <option value="Sistemas de Informação">Sistemas de Informação</option>
+              <option value="Design Digital">Design Digital</option>
+              <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenv. de Sistemas</option>
+              <option value="Inteligência Artificial">Inteligência Artificial</option>
+            </select>
+          </div>
+
+          <!-- Período -->
+          <div class="form-group">
+            <label for="periodo">Período Letivo</label>
+            <select id="periodo" name="periodo" class="form-select">
+              <option value="1º Período">1º Período</option>
+              <option value="2º Período">2º Período</option>
+              <option value="3º Período">3º Período</option>
+              <option value="4º Período">4º Período</option>
+              <option value="5º Período">5º Período</option>
+              <option value="6º Período">6º Período</option>
+              <option value="7º Período">7º Período</option>
+              <option value="8º Período">8º Período</option>
+              <option value="Concluinte">Concluinte</option>
+            </select>
+          </div>
+
+          <!-- Status do Aluno -->
+          <div class="form-group full-width">
+            <label for="status">Situação Cadastral</label>
+            <select id="status" name="status" class="form-select">
+              <option value="Ativo">Ativo (Regularmente Matriculado)</option>
+              <option value="Trancado">Trancado (Matrícula suspensa)</option>
+              <option value="Inativo">Inativo (Cancelado / Desistente)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="form-actions">
+          <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <p>Sistema Acadêmico Multi-Páginas (MPA) • HTML, CSS e JavaScript puros</p>
+  </footer>
+
+  <!-- Scripts JavaScript separados -->
+  <script src="js/storage.js"></script>
+  <script src="js/editar.js"></script>
+</body>
+</html>
