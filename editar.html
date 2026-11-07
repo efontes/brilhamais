@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editar Aluno - Portal do Aluno</title>
-  <!-- Folha de estilo separada -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -16,7 +15,7 @@
         <div class="logo-icon">🎓</div>
         <div class="logo-text">
           <h1>Portal do Aluno</h1>
-          <span>Gestão Acadêmica</span>
+          <span>Gestão Acadêmica (Supabase)</span>
         </div>
       </a>
       <nav class="nav-links">
@@ -32,7 +31,7 @@
     <div class="page-header">
       <div>
         <h2>Editar Aluno</h2>
-        <p id="editSubtitle">Atualize as informações cadastrais do estudante.</p>
+        <p id="editSubtitle">Atualize as informações cadastrais e acadêmicas no Supabase.</p>
       </div>
       <div>
         <a href="index.html" class="btn btn-secondary">
@@ -70,7 +69,6 @@
               id="matricula" 
               name="matricula" 
               class="form-input" 
-              placeholder="Número de matrícula"
               readonly
               style="background-color: #f1f5f9; cursor: not-allowed;"
             >
@@ -118,13 +116,7 @@
           <div class="form-group">
             <label for="curso">Curso <span class="required">*</span></label>
             <select id="curso" name="curso" class="form-select" required>
-              <option value="">Selecione um curso...</option>
-              <option value="Engenharia de Software">Engenharia de Software</option>
-              <option value="Ciência da Computação">Ciência da Computação</option>
-              <option value="Sistemas de Informação">Sistemas de Informação</option>
-              <option value="Design Digital">Design Digital</option>
-              <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenv. de Sistemas</option>
-              <option value="Inteligência Artificial">Inteligência Artificial</option>
+              <option value="">Carregando cursos...</option>
             </select>
           </div>
 
@@ -150,7 +142,8 @@
             <select id="status" name="status" class="form-select">
               <option value="Ativo">Ativo (Regularmente Matriculado)</option>
               <option value="Trancado">Trancado (Matrícula suspensa)</option>
-              <option value="Inativo">Inativo (Cancelado / Desistente)</option>
+              <option value="Concluído">Concluído</option>
+              <option value="Cancelado">Cancelado / Desistente</option>
             </select>
           </div>
 
@@ -168,11 +161,13 @@
 
   <!-- Rodapé -->
   <footer class="footer">
-    <p>Sistema Acadêmico Multi-Páginas (MPA) • HTML, CSS e JavaScript puros</p>
+    <p>Sistema Acadêmico Multi-Páginas (MPA) • Conectado ao Supabase (PostgreSQL)</p>
   </footer>
 
-  <!-- Scripts JavaScript separados -->
-  <script src="js/storage.js"></script>
+  <!-- SDK Oficial do Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/editar.js"></script>
 </body>
 </html>

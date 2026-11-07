@@ -1,12 +1,41 @@
 /**
- * cadastro.js - Lógica da página de Cadastro de Novo Aluno
+ * cadastro.js - Lógica de cadastro no Supabase (Alunos e Matrículas)
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('formCadastro');
   const btnCancelar = document.getElementById('btnCancelar');
+  const selectCurso = document.getElementById('curso');
+  const btnSubmit = form ? form.querySelector('button[type="submit"]') : null;
 
-  // Máscara simples de telefone
+  // 1. Carrega os cursos ativos diretamente do banco Supabase
+  await carregarCursos();
+
+  async function carregarCursos() {
+    if (!selectCurso) return;
+    try {
+      selectCurso.innerHTML = '<option value="">Carregando cursos do Supabase...</option>';
+      const cursos = await listarCursos();
+
+      if (cursos.length === 0) {
+        selectCurso.innerHTML = '<option value="">Nenhum curso disponível no momento</option>';
+        return;
+      }
+
+      selectCurso.innerHTML = '<option value="">Selecione um curso...</option>';
+      cursos.forEach(curso => {
+        const option = document.createElement('option');
+        option.value = curso.id;
+        option.textContent = `${curso.nome} (${curso.codigo})`;
+        selectCurso.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Erro ao carregar cursos:', err);
+      selectCurso.innerHTML = '<option value="">Erro ao carregar cursos</option>';
+    }
+  }
+
+  // Máscara de telefone
   const telefoneInput = document.getElementById('telefone');
   if (telefoneInput) {
     telefoneInput.addEventListener('input', (e) => {
@@ -24,18 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Cancelar e voltar para a listagem
   if (btnCancelar) {
     btnCancelar.addEventListener('click', () => {
       window.location.href = 'index.html';
     });
   }
 
-  // Tratamento da submissão do formulário
+  // Submissão do cadastro no Supabase
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       limparErros();
 
       const nome = document.getElementById('nome').value.trim();
@@ -43,11 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('email').value.trim();
       const telefone = document.getElementById('telefone').value.trim();
       const dataNascimento = document.getElementById('dataNascimento').value;
-      const curso = document.getElementById('curso').value;
+      const cursoId = document.getElementById('curso').value;
       const periodo = document.getElementById('periodo').value;
       const status = document.getElementById('status').value;
 
-      // Validações
       let formValido = true;
 
       if (!nome || nome.length < 3) {
@@ -60,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
         formValido = false;
       }
 
-      if (!curso) {
-        mostrarErro('curso', 'Selecione um curso.');
+      if (!cursoId) {
+        mostrarErro('curso', 'Selecione um curso válido.');
         formValido = false;
       }
 
@@ -75,25 +101,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Monta objeto do novo aluno
-      const novoAluno = {
-        matricula: matricula || undefined, // Será gerado se vazio
+      const dadosAluno = {
         nome,
         email,
-        telefone,
-        dataNascimento,
-        curso,
+        telefone: telefone || null,
+        data_nascimento: dataNascimento
+      };
+
+      const dadosMatricula = {
+        curso_id: cursoId,
+        codigo_matricula: matricula || undefined,
         periodo: periodo || '1º Período',
         status: status || 'Ativo'
       };
 
       try {
-        addAluno(novoAluno);
-        // Redirecionamento tradicional de aplicação multi-página (MPA)
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = 'Salvando no Supabase...';
+        }
+
+        await cadastrarAlunoComMatricula(dadosAluno, dadosMatricula);
         window.location.href = 'index.html?msg=cadastrado';
       } catch (err) {
-        console.error('Erro ao salvar aluno:', err);
-        showToast('Ocorreu um erro ao cadastrar o aluno.', 'error');
+        console.error('Erro ao salvar no Supabase:', err);
+        const mensagemErro = err.message && err.message.includes('unique') 
+          ? 'Já existe um cadastro com este e-mail ou matrícula.'
+          : 'Ocorreu um erro ao salvar o aluno no banco de dados.';
+        showToast(mensagemErro, 'error');
+
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Salvar e Concluir Cadastro';
+        }
       }
     });
   }

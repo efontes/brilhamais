@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Alunos - Listagem</title>
-  <!-- Folha de estilo separada -->
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -16,7 +15,7 @@
         <div class="logo-icon">🎓</div>
         <div class="logo-text">
           <h1>Portal do Aluno</h1>
-          <span>Gestão Acadêmica</span>
+          <span>Gestão Acadêmica (Supabase)</span>
         </div>
       </a>
       <nav class="nav-links">
@@ -32,7 +31,7 @@
     <div class="page-header">
       <div>
         <h2>Alunos Cadastrados</h2>
-        <p>Visão geral dos estudantes matriculados e controles rápidos de gerenciamento.</p>
+        <p>Visão geral dos estudantes matriculados e controles integrados ao Supabase.</p>
       </div>
       <div>
         <a href="cadastro.html" class="btn btn-primary">
@@ -53,7 +52,7 @@
       <div class="stat-card">
         <div class="stat-icon ativo">✅</div>
         <div class="stat-content">
-          <h3>Alunos Ativos</h3>
+          <h3>Matrículas Ativas</h3>
           <div class="stat-number" id="statAtivos">0</div>
         </div>
       </div>
@@ -67,7 +66,7 @@
       <div class="stat-card">
         <div class="stat-icon inativo">⏹️</div>
         <div class="stat-content">
-          <h3>Alunos Inativos</h3>
+          <h3>Inativos / Concluídos</h3>
           <div class="stat-number" id="statInativos">0</div>
         </div>
       </div>
@@ -85,25 +84,22 @@
         >
       </div>
 
+      <!-- Carregado dinamicamente via Supabase -->
       <select id="filterCurso" class="filter-select">
-        <option value="">Todos os Cursos</option>
-        <option value="Engenharia de Software">Engenharia de Software</option>
-        <option value="Ciência da Computação">Ciência da Computação</option>
-        <option value="Sistemas de Informação">Sistemas de Informação</option>
-        <option value="Design Digital">Design Digital</option>
-        <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenv. de Sistemas</option>
-        <option value="Inteligência Artificial">Inteligência Artificial</option>
+        <option value="">Carregando cursos...</option>
       </select>
 
       <select id="filterStatus" class="filter-select">
         <option value="">Todos os Status</option>
         <option value="Ativo">Ativo</option>
         <option value="Trancado">Trancado</option>
+        <option value="Concluído">Concluído</option>
+        <option value="Cancelado">Cancelado</option>
         <option value="Inativo">Inativo</option>
       </select>
 
-      <button type="button" id="btnResetar" class="btn btn-secondary" title="Recarrega os dados fictícios originais">
-        🔄 Restaurar Fictícios
+      <button type="button" id="btnResetar" class="btn btn-secondary" title="Popula dados fictícios caso o banco esteja vazio">
+        🔄 Carga Fictícia
       </button>
     </section>
 
@@ -116,13 +112,13 @@
               <th>Matrícula</th>
               <th>Aluno</th>
               <th>Telefone</th>
-              <th>Curso / Período</th>
+              <th>Curso(s) / Período</th>
               <th>Status</th>
               <th style="width: 170px;">Ações</th>
             </tr>
           </thead>
           <tbody id="alunosTableBody">
-            <!-- Linhas inseridas dinamicamente via JS -->
+            <!-- Linhas inseridas dinamicamente via Supabase -->
           </tbody>
         </table>
       </div>
@@ -132,11 +128,13 @@
 
   <!-- Rodapé -->
   <footer class="footer">
-    <p>Sistema Acadêmico Multi-Páginas (MPA) • HTML, CSS e JavaScript puros</p>
+    <p>Sistema Acadêmico Multi-Páginas (MPA) • Conectado ao Supabase (PostgreSQL)</p>
   </footer>
 
-  <!-- Scripts JavaScript separados -->
-  <script src="js/storage.js"></script>
+  <!-- SDK Oficial do Supabase via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/index.js"></script>
 </body>
 </html>

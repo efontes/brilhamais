@@ -1,8 +1,8 @@
 /**
- * index.js - Lógica da página inicial (Listagem e Gestão de Alunos)
+ * index.js - Lógica da página inicial integrada com o Supabase
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const tableBody = document.getElementById('alunosTableBody');
   const searchInput = document.getElementById('searchInput');
   const filterCurso = document.getElementById('filterCurso');
@@ -15,44 +15,115 @@ document.addEventListener('DOMContentLoaded', () => {
   const statTrancados = document.getElementById('statTrancados');
   const statInativos = document.getElementById('statInativos');
 
-  // Verifica mensagens passadas via query string (redirecionamentos de outras páginas)
+  let alunosCache = [];
+
+  // Exibe mensagem da query string (ex: ?msg=cadastrado)
   verificarMensagemUrl();
 
+  // 1. Carrega opções de cursos no filtro a partir do Supabase
+  await carregarFiltroCursos();
+
+  // 2. Carrega lista de alunos do Supabase
+  await recarregarTabela();
+
   /**
-   * Atualiza os cards de estatísticas
+   * Preenche o dropdown de filtro com os cursos reais do Supabase
+   */
+  async function carregarFiltroCursos() {
+    if (!filterCurso) return;
+    try {
+      const cursos = await listarCursos();
+      filterCurso.innerHTML = '<option value="">Todos os Cursos</option>';
+      cursos.forEach(curso => {
+        const opt = document.createElement('option');
+        opt.value = curso.id;
+        opt.textContent = `${curso.nome} (${curso.codigo})`;
+        filterCurso.appendChild(opt);
+      });
+    } catch (e) {
+      console.error('Falha ao preencher filtro de cursos:', e);
+    }
+  }
+
+  /**
+   * Busca alunos do Supabase e renderiza
+   */
+  async function recarregarTabela() {
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+            🔄 Conectando ao Supabase e carregando estudantes...
+          </td>
+        </tr>
+      `;
+    }
+
+    try {
+      alunosCache = await listarAlunosComMatriculas();
+      renderizarTabela();
+    } catch (err) {
+      if (tableBody) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--danger);">
+              ⚠️ Não foi possível carregar os dados do Supabase. Verifique a conexão.
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  /**
+   * Atualiza os cards de estatísticas (baseado nos vínculos de matrícula)
    */
   function atualizarEstatisticas(alunos) {
-    const total = alunos.length;
-    const ativos = alunos.filter(a => a.status === 'Ativo').length;
-    const trancados = alunos.filter(a => a.status === 'Trancado').length;
-    const inativos = alunos.filter(a => a.status === 'Inativo').length;
+    const totalAlunos = alunos.length;
 
-    if (statTotal) statTotal.textContent = total;
+    let ativos = 0;
+    let trancados = 0;
+    let inativos = 0;
+
+    alunos.forEach(aluno => {
+      const mat = (aluno.matriculas && aluno.matriculas[0]) ? aluno.matriculas[0] : null;
+      if (mat) {
+        if (mat.status === 'Ativo') ativos++;
+        else if (mat.status === 'Trancado') trancados++;
+        else inativos++;
+      }
+    });
+
+    if (statTotal) statTotal.textContent = totalAlunos;
     if (statAtivos) statAtivos.textContent = ativos;
     if (statTrancados) statTrancados.textContent = trancados;
     if (statInativos) statInativos.textContent = inativos;
   }
 
   /**
-   * Renderiza a lista de alunos na tabela
+   * Renderiza a lista de alunos e suas matrículas
    */
   function renderizarTabela() {
-    const todosAlunos = getAlunos();
-    atualizarEstatisticas(todosAlunos);
+    atualizarEstatisticas(alunosCache);
 
     const termoBusca = (searchInput ? searchInput.value : '').toLowerCase().trim();
     const cursoFiltro = filterCurso ? filterCurso.value : '';
     const statusFiltro = filterStatus ? filterStatus.value : '';
 
-    const alunosFiltrados = todosAlunos.filter(aluno => {
+    const alunosFiltrados = alunosCache.filter(aluno => {
+      const mat = (aluno.matriculas && aluno.matriculas.length > 0) ? aluno.matriculas[0] : null;
+      const nomeCurso = mat && mat.cursos ? mat.cursos.nome : '';
+      const codigoMat = mat ? mat.codigo_matricula : '';
+      const statusMat = mat ? mat.status : 'Ativo';
+
       const matchBusca = 
         aluno.nome.toLowerCase().includes(termoBusca) ||
-        aluno.matricula.toLowerCase().includes(termoBusca) ||
         aluno.email.toLowerCase().includes(termoBusca) ||
-        aluno.curso.toLowerCase().includes(termoBusca);
+        codigoMat.toLowerCase().includes(termoBusca) ||
+        nomeCurso.toLowerCase().includes(termoBusca);
 
-      const matchCurso = cursoFiltro === '' || aluno.curso === cursoFiltro;
-      const matchStatus = statusFiltro === '' || aluno.status === statusFiltro;
+      const matchCurso = cursoFiltro === '' || (mat && mat.curso_id === cursoFiltro);
+      const matchStatus = statusFiltro === '' || statusMat === statusFiltro;
 
       return matchBusca && matchCurso && matchStatus;
     });
@@ -65,8 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              <h3>Nenhum aluno encontrado</h3>
-              <p>Não há registros correspondentes aos critérios de busca ou filtros aplicados.</p>
+              <h3>Nenhum registro encontrado</h3>
+              <p>Nenhum aluno cadastrado no Supabase atende aos filtros atuais.</p>
             </div>
           </td>
         </tr>
@@ -75,10 +146,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     tableBody.innerHTML = alunosFiltrados.map(aluno => {
-      const statusClass = aluno.status.toLowerCase();
+      // Exibe os cursos do aluno (suporta N cursos)
+      const listaMatriculas = aluno.matriculas || [];
+      const matPrincipal = listaMatriculas[0] || {};
+      const statusClass = (matPrincipal.status || 'ativo').toLowerCase();
+
+      // Renderiza múltiplos cursos caso o aluno esteja em mais de um
+      const cursosHtml = listaMatriculas.length > 0 
+        ? listaMatriculas.map(m => `
+            <div>
+              <strong>${escaparHtml(m.cursos ? m.cursos.nome : 'Curso')}</strong>
+              <small style="display:block; color: var(--text-muted);">${escaparHtml(m.periodo || '')}</small>
+            </div>
+          `).join('<hr style="border:none; border-top:1px dashed var(--border); margin:4px 0;">')
+        : '<span style="color:var(--text-muted);">Sem matrícula</span>';
+
+      const matriculaExibida = matPrincipal.codigo_matricula ? `#${matPrincipal.codigo_matricula}` : '-';
+
       return `
         <tr>
-          <td><strong>#${aluno.matricula}</strong></td>
+          <td><strong>${escaparHtml(matriculaExibida)}</strong></td>
           <td>
             <div class="student-info">
               <span class="student-name">${escaparHtml(aluno.nome)}</span>
@@ -86,20 +173,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </td>
           <td>${escaparHtml(aluno.telefone || '-')}</td>
+          <td>${cursosHtml}</td>
           <td>
-            <div>${escaparHtml(aluno.curso)}</div>
-            <small style="color: var(--text-muted);">${escaparHtml(aluno.periodo || '')}</small>
-          </td>
-          <td>
-            <span class="status-badge ${statusClass}">${aluno.status}</span>
+            <span class="status-badge ${statusClass}">${escaparHtml(matPrincipal.status || 'Ativo')}</span>
           </td>
           <td>
             <div class="action-buttons">
-              <!-- Navegação tradicional multi-página com parâmetros na URL -->
-              <a href="editar.html?id=${aluno.id}" class="btn-icon edit" title="Editar Aluno">
+              <a href="editar.html?id=${aluno.id}" class="btn-icon edit" title="Editar no Supabase">
                 ✏️ Editar
               </a>
-              <button type="button" class="btn-icon delete btn-excluir" data-id="${aluno.id}" data-nome="${escaparHtml(aluno.nome)}" title="Excluir Aluno">
+              <button type="button" class="btn-icon delete btn-excluir" data-id="${aluno.id}" data-nome="${escaparHtml(aluno.nome)}" title="Excluir do Supabase">
                 🗑️ Excluir
               </button>
             </div>
@@ -108,37 +191,37 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }).join('');
 
-    // Adiciona event listeners aos botões de exclusão recém-renderizados
     vincularEventosExclusao();
   }
 
   /**
-   * Vincula eventos de clique para exclusão
+   * Eventos de exclusão integrada com o Supabase
    */
   function vincularEventosExclusao() {
     const botoesExcluir = document.querySelectorAll('.btn-excluir');
     botoesExcluir.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         const nome = btn.getAttribute('data-nome');
 
-        const confirmou = window.confirm(`Tem certeza que deseja excluir o aluno(a) "${nome}"?`);
+        const confirmou = window.confirm(`Tem certeza que deseja excluir "${nome}" do Supabase?`);
         if (confirmou) {
-          const sucesso = deleteAluno(id);
-          if (sucesso) {
-            showToast(`Aluno "${nome}" excluído com sucesso!`, 'success');
-            renderizarTabela();
-          } else {
-            showToast('Erro ao tentar excluir o aluno.', 'error');
+          try {
+            btn.disabled = true;
+            btn.textContent = '⏳ Excluindo...';
+            await excluirAluno(id);
+            showToast(`Aluno "${nome}" removido com sucesso do banco!`, 'success');
+            await recarregarTabela();
+          } catch (e) {
+            showToast('Erro ao excluir aluno no Supabase.', 'error');
+            btn.disabled = false;
+            btn.textContent = '🗑️ Excluir';
           }
         }
       });
     });
   }
 
-  /**
-   * Sanitização básica para evitar injeção de HTML
-   */
   function escaparHtml(texto) {
     if (!texto) return '';
     const div = document.createElement('div');
@@ -146,49 +229,43 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.innerHTML;
   }
 
-  /**
-   * Trata mensagens na URL (ex: ?msg=cadastrado)
-   */
   function verificarMensagemUrl() {
     const params = new URLSearchParams(window.location.search);
     const msg = params.get('msg');
     if (msg === 'cadastrado') {
-      showToast('Aluno cadastrado com sucesso!', 'success');
+      showToast('Aluno e matrícula cadastrados no Supabase com sucesso!', 'success');
     } else if (msg === 'atualizado') {
-      showToast('Dados do aluno atualizados com sucesso!', 'success');
+      showToast('Registro atualizado com sucesso no Supabase!', 'success');
     }
 
-    // Limpa a query string da URL sem recarregar a página
     if (msg) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
-  // Event Listeners para busca e filtros
-  if (searchInput) {
-    searchInput.addEventListener('input', renderizarTabela);
-  }
+  // Eventos de busca e filtros
+  if (searchInput) searchInput.addEventListener('input', renderizarTabela);
+  if (filterCurso) filterCurso.addEventListener('change', renderizarTabela);
+  if (filterStatus) filterStatus.addEventListener('change', renderizarTabela);
 
-  if (filterCurso) {
-    filterCurso.addEventListener('change', renderizarTabela);
-  }
-
-  if (filterStatus) {
-    filterStatus.addEventListener('change', renderizarTabela);
-  }
-
-  // Restaurar dados fictícios originais
+  // Botão para popular dados fictícios no Supabase caso a tabela esteja vazia
   if (btnResetar) {
-    btnResetar.addEventListener('click', () => {
-      const confirmou = window.confirm('Deseja restaurar a base de dados fictícios original? Isso substituirá as alterações.');
+    btnResetar.addEventListener('click', async () => {
+      const confirmou = window.confirm('Deseja popular os dados fictícios iniciais no seu banco de dados Supabase?');
       if (confirmou) {
-        resetarDadosFicticios();
-        showToast('Dados fictícios restaurados com sucesso!', 'success');
-        renderizarTabela();
+        try {
+          btnResetar.disabled = true;
+          btnResetar.textContent = '⏳ Gravando...';
+          await popularDadosFicticiosSupabase();
+          showToast('Dados fictícios inseridos no Supabase com sucesso!', 'success');
+          await recarregarTabela();
+        } catch (e) {
+          showToast('Erro ao popular dados no Supabase.', 'error');
+        } finally {
+          btnResetar.disabled = false;
+          btnResetar.textContent = '🔄 Carga Fictícia';
+        }
       }
     });
   }
-
-  // Renderização inicial
-  renderizarTabela();
 });

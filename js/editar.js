@@ -1,12 +1,13 @@
 /**
- * editar.js - Lógica da página de Edição de Aluno
+ * editar.js - Lógica de edição integrada ao Supabase
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('formEditar');
   const btnCancelar = document.getElementById('btnCancelar');
+  const selectCurso = document.getElementById('curso');
+  const btnSubmit = form ? form.querySelector('button[type="submit"]') : null;
 
-  // Obtém o ID do aluno via URL Query Parameters (ex: editar.html?id=2)
   const urlParams = new URLSearchParams(window.location.search);
   const alunoId = urlParams.get('id');
 
@@ -16,16 +17,63 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Busca dados do aluno no storage
-  const aluno = getAlunoById(alunoId);
-  if (!aluno) {
-    alert('Aluno não encontrado na base de dados.');
-    window.location.href = 'index.html';
-    return;
+  let matriculaIdAtual = null;
+
+  // 1. Carrega opções de cursos do Supabase
+  await carregarCursos();
+
+  // 2. Busca dados completos do aluno e sua matrícula
+  await carregarDadosAluno();
+
+  async function carregarCursos() {
+    if (!selectCurso) return;
+    try {
+      const cursos = await listarCursos();
+      selectCurso.innerHTML = '<option value="">Selecione um curso...</option>';
+      cursos.forEach(curso => {
+        const option = document.createElement('option');
+        option.value = curso.id;
+        option.textContent = `${curso.nome} (${curso.codigo})`;
+        selectCurso.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Erro ao listar cursos:', err);
+    }
   }
 
-  // Preenche os campos do formulário com os dados existentes
-  preencherFormulario(aluno);
+  async function carregarDadosAluno() {
+    try {
+      const aluno = await obterAlunoPorId(alunoId);
+      if (!aluno) {
+        alert('Aluno não encontrado no Supabase.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const mat = (aluno.matriculas && aluno.matriculas.length > 0) ? aluno.matriculas[0] : null;
+      if (mat) {
+        matriculaIdAtual = mat.id;
+        document.getElementById('matricula').value = mat.codigo_matricula || '';
+        document.getElementById('curso').value = mat.curso_id || '';
+        document.getElementById('periodo').value = mat.periodo || '1º Período';
+        document.getElementById('status').value = mat.status || 'Ativo';
+      }
+
+      document.getElementById('alunoId').value = aluno.id;
+      document.getElementById('nome').value = aluno.nome || '';
+      document.getElementById('email').value = aluno.email || '';
+      document.getElementById('telefone').value = aluno.telefone || '';
+      document.getElementById('dataNascimento').value = aluno.data_nascimento || '';
+
+      const subtitle = document.getElementById('editSubtitle');
+      if (subtitle) {
+        subtitle.textContent = `Atualizando registro de ${aluno.nome}`;
+      }
+    } catch (e) {
+      console.error('Erro ao obter aluno:', e);
+      alert('Erro de conexão ao carregar dados do aluno.');
+    }
+  }
 
   // Máscara de telefone
   const telefoneInput = document.getElementById('telefone');
@@ -45,26 +93,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Cancelar e voltar para a listagem
   if (btnCancelar) {
     btnCancelar.addEventListener('click', () => {
       window.location.href = 'index.html';
     });
   }
 
-  // Submissão da edição
+  // Submissão da atualização no Supabase
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       limparErros();
 
       const nome = document.getElementById('nome').value.trim();
-      const matricula = document.getElementById('matricula').value.trim();
       const email = document.getElementById('email').value.trim();
       const telefone = document.getElementById('telefone').value.trim();
       const dataNascimento = document.getElementById('dataNascimento').value;
-      const curso = document.getElementById('curso').value;
+      const cursoId = document.getElementById('curso').value;
       const periodo = document.getElementById('periodo').value;
       const status = document.getElementById('status').value;
 
@@ -80,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formValido = false;
       }
 
-      if (!curso) {
+      if (!cursoId) {
         mostrarErro('curso', 'Selecione um curso.');
         formValido = false;
       }
@@ -95,43 +140,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const dadosAtualizados = {
-        matricula: matricula || aluno.matricula,
+      const dadosAluno = {
         nome,
         email,
-        telefone,
-        dataNascimento,
-        curso,
+        telefone: telefone || null,
+        data_nascimento: dataNascimento
+      };
+
+      const dadosMatricula = {
+        curso_id: cursoId,
         periodo,
         status
       };
 
-      const sucesso = updateAluno(alunoId, dadosAtualizados);
-      if (sucesso) {
-        // Redirecionamento MPA tradicional
+      try {
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.textContent = 'Salvando no Supabase...';
+        }
+
+        await atualizarAlunoComMatricula(alunoId, dadosAluno, matriculaIdAtual, dadosMatricula);
         window.location.href = 'index.html?msg=atualizado';
-      } else {
-        showToast('Erro ao atualizar os dados do aluno.', 'error');
+      } catch (err) {
+        console.error('Erro ao atualizar no Supabase:', err);
+        showToast('Erro ao atualizar os dados no Supabase.', 'error');
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = 'Salvar Alterações';
+        }
       }
     });
-  }
-
-  function preencherFormulario(dados) {
-    document.getElementById('alunoId').value = dados.id;
-    document.getElementById('matricula').value = dados.matricula || '';
-    document.getElementById('nome').value = dados.nome || '';
-    document.getElementById('email').value = dados.email || '';
-    document.getElementById('telefone').value = dados.telefone || '';
-    document.getElementById('dataNascimento').value = dados.dataNascimento || '';
-    document.getElementById('curso').value = dados.curso || '';
-    document.getElementById('periodo').value = dados.periodo || '1º Período';
-    document.getElementById('status').value = dados.status || 'Ativo';
-
-    // Atualiza subtítulo com o nome do aluno
-    const subtitle = document.getElementById('editSubtitle');
-    if (subtitle) {
-      subtitle.textContent = `Atualizando registro de ${dados.nome} (Matrícula #${dados.matricula})`;
-    }
   }
 
   function validarEmail(email) {
